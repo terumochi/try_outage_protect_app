@@ -1,0 +1,53 @@
+state_code,state_name,regional_risk,grid_reliability,annual_outage_freq,avg_recovery_hours,storm_season_peak_month
+AL,Alabama,0.62,0.74,2.8,5.5,4
+AK,Alaska,0.70,0.62,3.4,9.0,1
+AZ,Arizona,0.38,0.82,1.6,3.5,7
+AR,Arkansas,0.60,0.72,2.9,5.8,5
+CA,California,0.55,0.78,2.2,4.5,12
+CO,Colorado,0.52,0.80,2.1,4.8,3
+CT,Connecticut,0.58,0.79,2.4,5.2,8
+DE,Delaware,0.54,0.81,2.1,4.6,8
+FL,Florida,0.78,0.70,3.6,6.5,9
+GA,Georgia,0.60,0.76,2.7,5.2,4
+HI,Hawaii,0.50,0.68,2.5,6.0,1
+ID,Idaho,0.48,0.79,2.0,4.9,1
+IL,Illinois,0.56,0.80,2.5,4.8,6
+IN,Indiana,0.57,0.78,2.6,5.0,6
+IA,Iowa,0.60,0.77,2.8,5.1,6
+KS,Kansas,0.66,0.74,3.1,5.4,5
+KY,Kentucky,0.58,0.75,2.7,5.3,4
+LA,Louisiana,0.80,0.68,3.8,7.0,9
+ME,Maine,0.64,0.73,3.0,6.2,1
+MD,Maryland,0.55,0.80,2.3,4.7,8
+MA,Massachusetts,0.57,0.81,2.3,5.0,8
+MI,Michigan,0.60,0.76,2.8,5.4,11
+MN,Minnesota,0.59,0.79,2.6,5.2,7
+MS,Mississippi,0.66,0.71,3.1,6.0,4
+MO,Missouri,0.61,0.75,2.9,5.3,5
+MT,Montana,0.50,0.77,2.2,5.0,1
+NE,Nebraska,0.62,0.76,2.9,5.1,6
+NV,Nevada,0.40,0.82,1.7,3.8,7
+NH,New Hampshire,0.62,0.75,2.9,5.9,1
+NJ,New Jersey,0.56,0.80,2.4,4.9,8
+NM,New Mexico,0.44,0.80,1.9,4.2,7
+NY,New York,0.58,0.81,2.5,5.0,8
+NC,North Carolina,0.63,0.76,2.8,5.3,9
+ND,North Dakota,0.58,0.76,2.6,5.3,1
+OH,Ohio,0.58,0.78,2.6,5.0,6
+OK,Oklahoma,0.70,0.72,3.3,5.6,5
+OR,Oregon,0.52,0.78,2.3,5.0,12
+PA,Pennsylvania,0.57,0.79,2.5,5.0,6
+RI,Rhode Island,0.56,0.80,2.3,5.0,8
+SC,South Carolina,0.64,0.74,2.9,5.5,9
+SD,South Dakota,0.58,0.76,2.6,5.2,6
+TN,Tennessee,0.59,0.75,2.7,5.2,4
+TX,Texas,0.68,0.71,3.2,5.8,5
+UT,Utah,0.46,0.81,1.9,4.2,8
+VT,Vermont,0.62,0.75,2.9,5.8,1
+VA,Virginia,0.57,0.78,2.5,5.0,9
+WA,Washington,0.54,0.78,2.4,5.1,12
+WV,West Virginia,0.66,0.72,3.1,6.2,6
+WI,Wisconsin,0.59,0.78,2.6,5.2,7
+WY,Wyoming,0.54,0.77,2.4,5.1,1
+DC,District of Columbia,0.52,0.82,2.0,4.3,8
+UNKNOWN,Unknown Region,0.55,0.76,2.6,5.2,6
