@@ -1,7 +1,7 @@
-name,address
-Downtown Office,"1600 Amphitheatre Parkway, Mountain View, CA"
-Gulf Coast Depot,"701 Poydras St, New Orleans, LA"
-Midwest Warehouse,"233 S Wacker Dr, Chicago, IL"
-Florida Branch,"400 N Tampa St, Tampa, FL"
-Northeast HQ,"350 5th Ave, New York, NY"
-Desert Site,"400 W Washington St, Phoenix, AZ"
+name,address,phone,outage_reported
+Downtown Office,"1600 Amphitheatre Parkway, Mountain View, CA",+15550100001,false
+Gulf Coast Depot,"701 Poydras St, New Orleans, LA",+15550100002,false
+Midwest Warehouse,"233 S Wacker Dr, Chicago, IL",+15550100003,false
+Florida Branch,"400 N Tampa St, Tampa, FL",+15550100004,true
+Northeast HQ,"350 5th Ave, New York, NY",+15550100005,false
+Desert Site,"400 W Washington St, Phoenix, AZ",,false

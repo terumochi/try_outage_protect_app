@@ -22,6 +22,8 @@ class AssessmentInput:
     address: str
     lat: Optional[float] = None
     lon: Optional[float] = None
+    phone: Optional[str] = None            # customer SMS number (E.164 preferred)
+    outage_reported: bool = False          # True if an outage is confirmed/reported
 
 
 @dataclass
@@ -34,6 +36,8 @@ class Assessment:
     region_name: str
     weather: WeatherInput
     prediction: Prediction
+    phone: Optional[str] = None
+    outage_reported: bool = False
     error: Optional[str] = None
 
 
@@ -74,5 +78,7 @@ def assess(item: AssessmentInput, *, offline: bool = False) -> Assessment:
         region_name=region.state_name,
         weather=weather,
         prediction=prediction,
+        phone=item.phone,
+        outage_reported=item.outage_reported,
         error=error,
     )

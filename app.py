@@ -12,6 +12,8 @@ from typing import List
 import pandas as pd
 import streamlit as st
 
+from powerguard import notifications
+from powerguard.notifier import build_notifier
 from powerguard.service import Assessment, AssessmentInput, assess
 
 st.set_page_config(page_title="PowerGuard ⚡", page_icon="⚡", layout="wide")
@@ -37,10 +39,39 @@ offline = st.sidebar.toggle(
     "fallback data. Predictions are flagged as degraded.",
 )
 
+st.sidebar.divider()
+st.sidebar.subheader("📣 Notifications (SMS)")
+notify_enabled = st.sidebar.toggle(
+    "Send customer notifications",
+    value=False,
+    help="After assessing, detect status changes vs. the last run and send SMS "
+    "alerts to customers with a phone number on file.",
+)
+use_twilio = st.sidebar.toggle(
+    "Use real Twilio SMS",
+    value=False,
+    help="Off = mock sender (logs messages, no account needed). On requires "
+    "TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_FROM_NUMBER env vars.",
+)
+risk_threshold = st.sidebar.slider(
+    "Pre-storm alert threshold (risk score)",
+    min_value=0, max_value=100, value=50,
+    help="Send a pre-storm alert when risk is High/Severe or the score crosses "
+    "this threshold.",
+)
+dry_run = st.sidebar.toggle(
+    "Preview only (don't send / don't save status)",
+    value=False,
+    help="Render the messages and decisions without sending or advancing the "
+    "change-detection store.",
+)
+
+st.sidebar.divider()
 st.sidebar.markdown(
     "- **Model:** offline heuristic (deterministic)\n"
     "- **Weather:** Open-Meteo (live) + seasonal fallback\n"
-    "- **Geocoding:** Nominatim (cached)"
+    "- **Geocoding:** Nominatim (cached)\n"
+    "- **Notify:** SMS (mock by default, Twilio opt-in)"
 )
 
 
@@ -60,6 +91,25 @@ def _opt_float(value) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _opt_str(value) -> str | None:
+    """Parse an optional text cell, tolerating blanks/NaN."""
+    if value is None:
+        return None
+    try:
+        if pd.isna(value):
+            return None
+    except (TypeError, ValueError):
+        pass
+    text = str(value).strip()
+    return text or None
+
+
+def _opt_bool(value) -> bool:
+    """Parse an optional boolean cell (true/yes/1/y)."""
+    s = _opt_str(value)
+    return s is not None and s.lower() in {"true", "yes", "1", "y", "t"}
 
 
 def run_assessments(items: List[AssessmentInput]) -> List[Assessment]:
@@ -173,6 +223,55 @@ def render_results(results: List[Assessment]) -> None:
                     st.markdown(f"- {note}")
 
 
+def render_notifications(results: List[Assessment]) -> None:
+    """Run change detection + send SMS, and display the outcome."""
+    st.subheader("📣 Notifications")
+
+    try:
+        notifier = build_notifier(use_twilio=use_twilio)
+    except ValueError as exc:
+        st.error(f"Twilio is enabled but not configured: {exc}")
+        st.info("Turn off 'Use real Twilio SMS' to use the mock sender instead.")
+        return
+
+    decisions = notifications.process(
+        results,
+        notifier,
+        risk_threshold=float(risk_threshold),
+        dry_run=dry_run,
+    )
+
+    sent = [d for d in decisions if d.should_notify and d.body]
+    skipped = [d for d in decisions if not d.should_notify]
+
+    mode = "Preview (nothing sent)" if dry_run else f"Sent via {notifier.channel}"
+    st.caption(
+        f"{mode} · {len(sent)} notification(s) triggered · {len(skipped)} no-change/skipped"
+    )
+
+    if sent:
+        for d in sent:
+            label = "Pre-storm alert" if d.template == "pre_storm" else "Outage notification"
+            status = ""
+            if d.send_result:
+                status = " ✅" if d.send_result.success else f" ❌ {d.send_result.detail}"
+            with st.expander(f"{label} → {d.name}{status}", expanded=False):
+                st.caption(f"Reason: {d.reason}")
+                st.code(d.body, language="text")
+    if skipped:
+        with st.expander(f"No notification for {len(skipped)} address(es)"):
+            for d in skipped:
+                st.markdown(f"- **{d.name}** — {d.reason}")
+
+
+def handle(items: List[AssessmentInput]) -> None:
+    """Assess, render results, and (optionally) run notifications."""
+    results = run_assessments(items)
+    render_results(results)
+    if notify_enabled:
+        render_notifications(results)
+
+
 # --------------------------------------------------------------------------- #
 # Main
 # --------------------------------------------------------------------------- #
@@ -191,20 +290,37 @@ with tab_manual:
         address = st.text_input(
             "Address", placeholder="1600 Amphitheatre Parkway, Mountain View, CA"
         )
+        phone = st.text_input(
+            "Customer phone (for SMS, optional)",
+            placeholder="+15551234567",
+            help="Include country code (E.164). Required to receive SMS alerts.",
+        )
+        outage_reported = st.checkbox(
+            "An outage has been reported for this address",
+            help="Check this to send the restoration-focused outage notification "
+            "instead of a pre-storm alert.",
+        )
         submitted = st.form_submit_button("Assess")
     if submitted:
         if not address.strip():
             st.error("Please enter an address.")
         else:
-            results = run_assessments(
-                [AssessmentInput(name=name.strip(), address=address.strip())]
+            handle(
+                [
+                    AssessmentInput(
+                        name=name.strip(),
+                        address=address.strip(),
+                        phone=phone.strip() or None,
+                        outage_reported=outage_reported,
+                    )
+                ]
             )
-            render_results(results)
 
 with tab_csv:
     st.write(
         "Upload a CSV with an **`address`** column. Optional columns: "
-        "`name`, `lat`, `lon` (if `lat`/`lon` are present, geocoding is skipped)."
+        "`name`, `lat`, `lon` (if present, geocoding is skipped), `phone` "
+        "(for SMS), and `outage_reported` (true/false)."
     )
     uploaded = st.file_uploader("CSV file", type=["csv"])
     use_sample = st.checkbox("Use the bundled sample file instead")
@@ -229,9 +345,10 @@ with tab_csv:
                         address=str(row["address"]).strip(),
                         lat=_opt_float(row.get("lat")),
                         lon=_opt_float(row.get("lon")),
+                        phone=_opt_str(row.get("phone")),
+                        outage_reported=_opt_bool(row.get("outage_reported")),
                     )
                     for _, row in df_in.iterrows()
                     if str(row.get("address", "")).strip()
                 ]
-                results = run_assessments(items)
-                render_results(results)
+                handle(items)
